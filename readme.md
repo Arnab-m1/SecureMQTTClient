@@ -23,31 +23,32 @@ The `SecureMQTTClient` library provides a secure and easy way to connect ESP8266
 
 Download the library ZIP from this repository and include it in your Arduino IDE via:
 
+```plaintext
+Sketch > Include Library > Add .ZIP Library...
 
 ## Configuration
+   Configure the library with your network settings, MQTT server details, and certificate paths:
 
-Configure the library with your network settings, MQTT server details, and certificate paths:
-
-- **SSID and Password:** WiFi credentials.
-- **Server Address and Port:** Address and port number of your MQTT broker.
-- **Username and Password:** Credentials for MQTT authentication, if required.
-- **Certificate Paths:** Paths to the SSL/TLS certificate files stored in SPIFFS.
-- **Publish Channel:** The MQTT topic on which the device will publish messages.
-- **NTP Server:** Address of an NTP server for time synchronization.
-- **DNS Server:** Optional configuration for a custom DNS server, default is Google's DNS.
+- SSID and Password: WiFi credentials.
+- Server Address and Port: Address and port number of your MQTT broker.
+- Username and Password: Credentials for MQTT authentication, if required.
+- Certificate Paths: Paths to the SSL/TLS certificate files stored in SPIFFS.
+- Publish Channel: The MQTT topic on which the device will publish messages.
+- NTP Server: Address of an NTP server for time synchronization.
+- DNS Server: Optional configuration for a custom DNS server, default is Google's DNS.
+- Library Functions
+- SecureMQTTClient(...)
+- Constructor to initialize the library with all necessary configurations.
 
 ## Library Functions
+    SecureMQTTClient(...)
+    Constructor to initialize the library with all necessary configurations
 
-### Constructor
-
-```cpp
 SecureMQTTClient(const char* ssid, const char* password, const char* server, uint16_t port,
                  const char* user, const char* mqttPassword, const char* certPath, const char* keyPath,
                  const char* caPath, const char* publishChannel, const char* ntpServer = "pool.ntp.org",
                  const IPAddress& dnsServer = IPAddress(8, 8, 8, 8));
 
-
-Initializes the library with all necessary configurations.
 
 begin()
 Initializes the WiFi connection, synchronizes the time, loads certificates, and connects to the MQTT broker.
@@ -71,8 +72,8 @@ Below is an example demonstrating how to use the SecureMQTTClient:
 
 // Configure your network and MQTT settings
 SecureMQTTClient client(
-    "YourWiFiSSID", "YourWifiPassword", "mqtt.example.com", 8883,
-    "mqttUser", "mqttPassword", "/cert.der", "/private.der", "/ca.der",
+    "YourWiFiSSID", "YourWifiPassword", "mqtt.example.com", 8883, 
+    "mqttUser", "mqttPassword", "/cert.der", "/private.der", "/ca.der", 
     "topic/test"
 );
 
@@ -87,10 +88,9 @@ void loop() {
     delay(2000); // Publish every 2 seconds
 }
 
+
 Support
 For issues, questions, or contributions, please use the GitHub issues page of this repository.
 
 License
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-
