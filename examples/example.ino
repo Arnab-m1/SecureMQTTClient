@@ -1,16 +1,10 @@
 #include <SecureMQTTClient.h>
 
-// Configuration parameters
-const char* ssid = "yourSSID";
-const char* password = "yourWifiPassword";
-const char* mqttServer = "mqtt.example.com";
-const uint16_t mqttPort = 8883;
-const char* mqttUser = "user";
-const char* mqttPassword = "password";
-const char* publishChannel = "topic/test";
-const char* ntpServer = "pool.ntp.org";
-
-SecureMQTTClient client(ssid, password, mqttServer, mqttPort, mqttUser, mqttPassword, publishChannel, ntpServer);
+SecureMQTTClient client(
+    "yourSSID", "yourWifiPassword", "mqtt.example.com", 8883, 
+    "user", "password", "/cert.der", "/private.der", "/ca.der", 
+    "topic/test"
+);
 
 void setup() {
     Serial.begin(9600);
@@ -19,6 +13,6 @@ void setup() {
 
 void loop() {
     client.loop();
-    client.publish("Hello from ESP8266");
-    delay(1000);
+    client.publish("Hello from ESP8266 with secure MQTT!");
+    delay(2000); // Publish every 2 seconds
 }

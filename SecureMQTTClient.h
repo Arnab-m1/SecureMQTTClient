@@ -11,10 +11,15 @@
 
 class SecureMQTTClient {
 public:
-    SecureMQTTClient(const char* ssid, const char* password, const char* server, uint16_t port, const char* user, const char* mqttPassword, const char* publishChannel, const char* ntpServer);
+    SecureMQTTClient(const char* ssid, const char* password, const char* server, uint16_t port,
+                     const char* user, const char* mqttPassword, const char* certPath, const char* keyPath,
+                     const char* caPath, const char* publishChannel, const char* ntpServer = "pool.ntp.org",
+                     const IPAddress& dnsServer = IPAddress(8, 8, 8, 8));
     void begin();
     void loop();
     void publish(const char* message);
+    const char* getLastErrorMessage();
+    static const char* explainMqttError(int rc);
 
 private:
     const char* _ssid;
@@ -23,8 +28,12 @@ private:
     uint16_t _port;
     const char* _user;
     const char* _mqttPassword;
+    const char* _certPath;
+    const char* _keyPath;
+    const char* _caPath;
     const char* _publishChannel;
     const char* _ntpServer;
+    IPAddress _dnsServer;
     WiFiClientSecure _espClient;
     PubSubClient _client;
     WiFiUDP _ntpUDP;
@@ -34,6 +43,7 @@ private:
     void connectMQTT();
     void setupTime();
     void loadCertificates();
+    String _lastError;
 };
 
 #endif

@@ -1,87 +1,96 @@
 # SecureMQTTClient Library
 
-The `SecureMQTTClient` library is designed for ESP8266 modules to facilitate easy and secure MQTT communications using TLS encryption. This library simplifies the process of setting up WiFi, NTP synchronization, and MQTT connections with secure authentication using certificates. It is suitable for IoT projects requiring secure data transmission to MQTT brokers.
+The `SecureMQTTClient` library provides a secure and easy way to connect ESP8266 modules to MQTT brokers over TLS. This library simplifies handling WiFi connections, secure MQTT communications, and time synchronization, making it ideal for IoT projects requiring reliable and secure data transmissions.
 
 ## Features
 
-- Easy WiFi setup
-- NTP-based time synchronization
-- Secure MQTT connection using TLS/SSL
-- Automatic handling of MQTT reconnections
-- Simple interface for publishing MQTT messages
-- Built-in certificate management
-
-## How It Works
-
-### Initialization
-
-When an instance of `SecureMQTTClient` is created, it requires configuration parameters including network credentials, MQTT server details, and paths to certificate files. These parameters are used throughout the library to establish and maintain secure connections.
-
-### Connecting to WiFi
-
-The library automatically attempts to connect to the specified WiFi network. It continues to retry until the connection is established, providing feedback via the serial output about the connection status.
-
-### Time Synchronization
-
-Time synchronization is crucial for TLS connections, as certificates have valid from and to dates that need to be verified against the current time. The library uses an NTP client to synchronize the device's clock with the specified NTP server.
-
-### Certificate Management
-
-Certificates are loaded from the SPIFFS (SPI Flash File System) on the ESP8266. The library supports loading:
-- A client certificate (`cert.der`)
-- A private key (`private.der`)
-- A CA certificate (`ca.der`)
-
-These files need to be pre-loaded onto the device's file system before they can be used by the library. Proper loading and validation of these files are critical for establishing a trusted and secure TLS connection.
-
-### MQTT Connection
-
-Once the WiFi connection and time synchronization are in place, the library attempts to connect to the MQTT server using the secure client. If the connection is unsuccessful, the library retries until it establishes the connection, reporting any SSL errors encountered during the process.
-
-### Messaging
-
-Users can publish messages to specified MQTT topics using the `publish` method. The library ensures that the device maintains the MQTT connection, automatically reconnecting and resending messages as needed.
+- **WiFi Connection Management:** Automatically handles WiFi connectivity.
+- **Time Synchronization:** Synchronizes time with NTP servers to ensure valid TLS transactions.
+- **Secure MQTT Communication:** Facilitates encrypted communications over TLS.
+- **Automated Reconnections:** Handles reconnections for both WiFi and MQTT.
+- **Easy Message Publishing:** Provides a simple interface for publishing messages to MQTT topics.
+- **Detailed Error Reporting:** Offers explanations for common MQTT connection issues.
 
 ## Prerequisites
 
-- ESP8266 development board (e.g., NodeMCU, Wemos D1 etc.)
-- Arduino IDE 1.8.10 or higher
-- ESP8266 board packages installed in Arduino IDE
-- MQTT broker that supports TLS (like Mosquitto configured for TLS)
-- SPIFFS formatted and populated with necessary certificate files (`cert.der`, `private.der`, `ca.der`)
+- ESP8266 development board (e.g., NodeMCU, Wemos D1, etc.).
+- Arduino IDE 1.8.10 or higher.
+- ESP8266 board packages installed in the Arduino IDE.
+- An MQTT broker that supports TLS.
+- SPIFFS formatted with the necessary certificate files (`cert.der`, `private.der`, `ca.der`).
 
 ## Installation
 
-1. **Download the Library**: Click on `Download ZIP` from this repository and include it in your Arduino IDE.
-2. **Install the Library**: Open the Arduino IDE, navigate to `Sketch > Include Library > Add .ZIP Library...` and select the downloaded ZIP file.
+Download the library ZIP from this repository and include it in your Arduino IDE via:
 
-## Quick Start
 
-### Configure the Library
+## Configuration
 
-Before using the `SecureMQTTClient`, you must configure it with your network and broker settings. Modify the following parameters in your sketch:
+Configure the library with your network settings, MQTT server details, and certificate paths:
 
-- `ssid`: Your WiFi network name
-- `password`: Your WiFi network password
-- `mqttServer`: The domain or IP address of your MQTT broker
-- `mqttPort`: The port on which your MQTT broker is running (commonly 8883 for TLS)
-- `mqttUser`: Username for MQTT authentication (if applicable)
-- `mqttPassword`: Password for MQTT authentication
-- `publishChannel`: MQTT topic to publish messages
-- `ntpServer`: NTP server for time synchronization
+- **SSID and Password:** WiFi credentials.
+- **Server Address and Port:** Address and port number of your MQTT broker.
+- **Username and Password:** Credentials for MQTT authentication, if required.
+- **Certificate Paths:** Paths to the SSL/TLS certificate files stored in SPIFFS.
+- **Publish Channel:** The MQTT topic on which the device will publish messages.
+- **NTP Server:** Address of an NTP server for time synchronization.
+- **DNS Server:** Optional configuration for a custom DNS server, default is Google's DNS.
 
-### Sample Sketch
+## Library Functions
 
-[Include a simple example here, similar to the previous section]
+### Constructor
 
-## Documentation
+```cpp
+SecureMQTTClient(const char* ssid, const char* password, const char* server, uint16_t port,
+                 const char* user, const char* mqttPassword, const char* certPath, const char* keyPath,
+                 const char* caPath, const char* publishChannel, const char* ntpServer = "pool.ntp.org",
+                 const IPAddress& dnsServer = IPAddress(8, 8, 8, 8));
 
-For more detailed documentation, please refer to the comments in the header and implementation files of the library.
 
-## Support
+Initializes the library with all necessary configurations.
 
+begin()
+Initializes the WiFi connection, synchronizes the time, loads certificates, and connects to the MQTT broker.
+
+loop()
+Maintains network connections and handles MQTT client processes. Should be called regularly in the Arduino loop() function to manage connectivity.
+
+publish(const char* message)
+Publishes a message to the MQTT topic specified in the constructor.
+
+getLastErrorMessage()
+Returns the last error message encountered by the client.
+
+explainMqttError(int rc)
+Provides a human-readable explanation of MQTT error codes.
+
+Example Usage
+Below is an example demonstrating how to use the SecureMQTTClient:
+
+#include <SecureMQTTClient.h>
+
+// Configure your network and MQTT settings
+SecureMQTTClient client(
+    "YourWiFiSSID", "YourWifiPassword", "mqtt.example.com", 8883,
+    "mqttUser", "mqttPassword", "/cert.der", "/private.der", "/ca.der",
+    "topic/test"
+);
+
+void setup() {
+    Serial.begin(9600);
+    client.begin(); // Initialize and connect
+}
+
+void loop() {
+    client.loop(); // Maintain connectivity and handle MQTT
+    client.publish("Hello from ESP8266 with secure MQTT!");
+    delay(2000); // Publish every 2 seconds
+}
+
+Support
 For issues, questions, or contributions, please use the GitHub issues page of this repository.
 
-## License
-
+License
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+
