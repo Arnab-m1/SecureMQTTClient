@@ -1,5 +1,6 @@
 #include "SecureMQTTClient.h"
 
+// Constructor to initialize the library with necessary configurations
 SecureMQTTClient::SecureMQTTClient(const char* ssid, const char* password, const char* server, uint16_t port,
                                    const char* user, const char* mqttPassword, const char* certPath, const char* keyPath,
                                    const char* caPath, const char* publishChannel, const char* ntpServer,
@@ -9,29 +10,36 @@ SecureMQTTClient::SecureMQTTClient(const char* ssid, const char* password, const
   _dnsServer(dnsServer), _timeClient(_ntpUDP, ntpServer) {
     _client.setServer(server, port);
     _client.setClient(_espClient);
-    WiFi.hostname("ESP8266-MQTT");
-    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, dnsServer);
+    initNetwork();
     _timeClient.begin();
+}
+
+void SecureMQTTClient::initNetwork() {
+    WiFi.hostname("ESP8266-MQTT");
+    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, _dnsServer);
 }
 
 void SecureMQTTClient::setupWifi() {
     if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("Connecting to WiFi...");
         WiFi.begin(_ssid, _password);
         while (WiFi.status() != WL_CONNECTED) {
             delay(500);
             Serial.print(".");
         }
-        Serial.println("WiFi connected");
-        Serial.println("IP address: ");
+        Serial.println("\nWiFi connected");
+        Serial.print("IP address: ");
         Serial.println(WiFi.localIP());
     }
 }
 
 void SecureMQTTClient::setupTime() {
+    Serial.println("Synchronizing time...");
     while (!_timeClient.update()) {
         _timeClient.forceUpdate();
     }
     _espClient.setX509Time(_timeClient.getEpochTime());
+    Serial.println("Time synchronized");
 }
 
 void SecureMQTTClient::loadCertificates() {
@@ -41,56 +49,46 @@ void SecureMQTTClient::loadCertificates() {
         return;
     }
 
-    File cert = SPIFFS.open(_certPath, "r");
-    if (!cert) {
-        _lastError = "Certificate file not found";
-        Serial.println(_lastError);
+    if (!loadFile(_certPath, &_espClient.loadCertificate) ||
+        !loadFile(_keyPath, &_espClient.loadPrivateKey) ||
+        !loadFile(_caPath, &_espClient.loadCACert)) {
+        SPIFFS.end();  // Unmount file system after loading certificates
         return;
     }
-    if (!_espClient.loadCertificate(cert)) {
-        _lastError = "Failed to load certificate";
-        Serial.println(_lastError);
-    }
-    cert.close();
 
-    File privateKey = SPIFFS.open(_keyPath, "r");
-    if (!privateKey) {
-        _lastError = "Private key file not found";
-        Serial.println(_lastError);
-        return;
-    }
-    if (!_espClient.loadPrivateKey(privateKey)) {
-        _lastError = "Failed to load private key";
-        Serial.println(_lastError);
-    }
-    privateKey.close();
+    SPIFFS.end();  // Unmount file system after loading certificates
+}
 
-    File ca = SPIFFS.open(_caPath, "r");
-    if (!ca) {
-        _lastError = "CA file not found";
+bool SecureMQTTClient::loadFile(const char* path, bool (WiFiClientSecure::*loadFunc)(File&)) {
+    File file = SPIFFS.open(path, "r");
+    if (!file) {
+        _lastError = String("File not found: ") + path;
         Serial.println(_lastError);
-        return;
+        return false;
     }
-    if (!_espClient.loadCACert(ca)) {
-        _lastError = "Failed to load CA";
+    if (!(this->_espClient.*loadFunc)(file)) {
+        _lastError = String("Failed to load file: ") + path;
         Serial.println(_lastError);
+        file.close();
+        return false;
     }
-    ca.close();
+    file.close();
+    return true;
 }
 
 void SecureMQTTClient::connectMQTT() {
     while (!_client.connected()) {
-        Serial.print("Attempting MQTT connection...");
+        Serial.println("Attempting MQTT connection...");
         if (_client.connect("ESP8266Client", _user, _mqttPassword)) {
-            Serial.println("connected to MQTT");
+            Serial.println("Connected to MQTT");
         } else {
-            Serial.print("failed, rc=");
+            Serial.print("Connection failed, rc=");
             Serial.print(_client.state());
             _lastError = explainMqttError(_client.state());
             Serial.print(" (");
             Serial.print(_lastError);
-            Serial.println(") try again in 5 seconds");
-            delay(5000);
+            Serial.println(") trying again in 5 seconds");
+            delay(5000); // Consider using non-blocking delay
         }
     }
 }
@@ -125,10 +123,10 @@ void SecureMQTTClient::publish(const char* message) {
 
 void SecureMQTTClient::loop() {
     if (WiFi.status() != WL_CONNECTED) {
-        setupWifi();  // Attempt to reconnect WiFi
+        setupWifi();
     }
     if (!_client.connected()) {
-        connectMQTT();  // Ensure the MQTT connection is alive
+        connectMQTT();
     }
     _client.loop();
 }
