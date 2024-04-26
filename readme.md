@@ -1,79 +1,59 @@
 # SecureMQTTClient Library
 
-The `SecureMQTTClient` library provides a secure and easy way to connect ESP8266 modules to MQTT brokers over TLS. This library simplifies handling WiFi connections, secure MQTT communications, and time synchronization, making it ideal for IoT projects requiring reliable and secure data transmissions.
+The `SecureMQTTClient` library is designed for ESP8266 modules to establish secure connections to MQTT brokers over TLS. It simplifies the integration of WiFi connectivity, secure MQTT communication, and time synchronization, making it suitable for IoT projects requiring secure and reliable data transmissions.
 
 ## Features
 
-- **WiFi Connection Management:** Automatically handles WiFi connectivity.
-- **Time Synchronization:** Synchronizes time with NTP servers to ensure valid TLS transactions.
-- **Secure MQTT Communication:** Facilitates encrypted communications over TLS.
-- **Automated Reconnections:** Handles reconnections for both WiFi and MQTT.
-- **Easy Message Publishing:** Provides a simple interface for publishing messages to MQTT topics.
-- **Detailed Error Reporting:** Offers explanations for common MQTT connection issues.
+- **WiFi Connection Management:** Automatically handles the complexities of managing WiFi connections.
+- **Time Synchronization:** Ensures accurate timekeeping with NTP servers for valid TLS transactions.
+- **Secure MQTT Communication:** Supports encrypted communications over TLS.
+- **Automated Reconnections:** Automatically manages reconnections for both WiFi and MQTT services.
+- **Easy Message Publishing:** Provides a straightforward interface for publishing messages to MQTT topics.
+- **Detailed Error Reporting:** Delivers comprehensive explanations for common MQTT connection errors.
 
 ## Prerequisites
 
-- ESP8266 development board (e.g., NodeMCU, Wemos D1, etc.).
-- Arduino IDE 1.8.10 or higher.
-- ESP8266 board packages installed in the Arduino IDE.
+- An ESP8266 development board (e.g., NodeMCU, Wemos D1).
+- Arduino IDE 1.8.10 or newer.
+- ESP8266 board packages installed within the Arduino IDE.
 - An MQTT broker that supports TLS.
-- SPIFFS formatted with the necessary certificate files (`cert.der`, `private.der`, `ca.der`).
+- SPIFFS formatted with the required certificate files: `cert.der`, `private.der`, `ca.der`.
 
 ## Installation
 
-Download the library ZIP from this repository and include it in your Arduino IDE via:
-
-```plaintext
-Sketch > Include Library > Add .ZIP Library...
+To install the library:
+1. Download the ZIP file from the repository.
+2. Add it to your Arduino IDE via `Sketch > Include Library > Add .ZIP Library`.
 
 ## Configuration
-   Configure the library with your network settings, MQTT server details, and certificate paths:
 
-- SSID and Password: WiFi credentials.
-- Server Address and Port: Address and port number of your MQTT broker.
-- Username and Password: Credentials for MQTT authentication, if required.
-- Certificate Paths: Paths to the SSL/TLS certificate files stored in SPIFFS.
-- Publish Channel: The MQTT topic on which the device will publish messages.
-- NTP Server: Address of an NTP server for time synchronization.
-- DNS Server: Optional configuration for a custom DNS server, default is Google's DNS.
-- Library Functions
-- SecureMQTTClient(...)
-- Constructor to initialize the library with all necessary configurations.
+Configure the library with the following settings:
+- **SSID and Password:** Your WiFi credentials.
+- **Server Address and Port:** Your MQTT broker's address and port.
+- **Username and Password:** MQTT authentication credentials, if required.
+- **Certificate Paths:** Locations of SSL/TLS certificate files stored on SPIFFS.
+- **Publish Channel:** MQTT topic for publishing messages.
+- **NTP Server:** NTP server address for time synchronization, default is `pool.ntp.org`.
+- **DNS Server:** Optionally specify a custom DNS server, default is Google's DNS (8.8.8.8).
 
 ## Library Functions
-    SecureMQTTClient(...)
-    Constructor to initialize the library with all necessary configurations
 
-SecureMQTTClient(const char* ssid, const char* password, const char* server, uint16_t port,
-                 const char* user, const char* mqttPassword, const char* certPath, const char* keyPath,
-                 const char* caPath, const char* publishChannel, const char* ntpServer = "pool.ntp.org",
-                 const IPAddress& dnsServer = IPAddress(8, 8, 8, 8));
+- `SecureMQTTClient(...)`: Constructor for initializing the library with necessary configurations.
+- `begin()`: Sets up the WiFi connection, synchronizes time, loads certificates, and connects to the MQTT broker.
+- `loop()`: Keeps network connections active and manages MQTT client processes. This function should be called regularly within the Arduino `loop()` function.
+- `publish(const char* message)`: Publishes a message to the specified MQTT topic.
+- `getLastErrorMessage()`: Retrieves the last encountered error message.
+- `explainMqttError(int rc)`: Provides explanations for MQTT error codes.
 
+## Example Usage
 
-begin()
-Initializes the WiFi connection, synchronizes the time, loads certificates, and connects to the MQTT broker.
-
-loop()
-Maintains network connections and handles MQTT client processes. Should be called regularly in the Arduino loop() function to manage connectivity.
-
-publish(const char* message)
-Publishes a message to the MQTT topic specified in the constructor.
-
-getLastErrorMessage()
-Returns the last error message encountered by the client.
-
-explainMqttError(int rc)
-Provides a human-readable explanation of MQTT error codes.
-
-Example Usage
-Below is an example demonstrating how to use the SecureMQTTClient:
-
+```cpp
 #include <SecureMQTTClient.h>
 
 // Configure your network and MQTT settings
 SecureMQTTClient client(
-    "YourWiFiSSID", "YourWifiPassword", "mqtt.example.com", 8883, 
-    "mqttUser", "mqttPassword", "/cert.der", "/private.der", "/ca.der", 
+    "YourWiFiSSID", "YourWifiPassword", "mqtt.example.com", 8883,
+    "mqttUser", "mqttPassword", "/cert.der", "/private.der", "/ca.der",
     "topic/test"
 );
 
@@ -90,7 +70,7 @@ void loop() {
 
 
 Support
-For issues, questions, or contributions, please use the GitHub issues page of this repository.
+For any issues, questions, or contributions, please visit the GitHub issues page associated with this repository.
 
 License
 This project is licensed under the MIT License - see the LICENSE file for details.
